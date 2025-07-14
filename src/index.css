@@ -2,31 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Luxury Hotel Concierge Design System
+   Colors: HSL format with gold/cream/navy palette for sophisticated hotel ambiance
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Background colors for luxury hotel theme */
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
+    /* Card backgrounds with subtle warmth */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Luxury gold/navy primary colors */
+    --primary: 45 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 45 100% 30%;
+    
+    /* Elegant gold accent */
+    --gold: 45 100% 51%;
+    --gold-light: 45 100% 85%;
+    --gold-dark: 45 100% 25%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Hotel navy secondary */
+    --secondary: 220 39% 11%;
+    --secondary-foreground: 0 0% 100%;
 
+    /* Subtle grays for UI elements */
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 45 100% 85%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -34,9 +45,19 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 45 100% 51%;
 
-    --radius: 0.5rem;
+    /* Glassmorphism effects */
+    --glass-bg: 0 0% 100% / 0.15;
+    --glass-border: 0 0% 100% / 0.2;
+    --glass-hover: 0 0% 100% / 0.25;
+    
+    /* Shadows for depth */
+    --shadow-soft: 0 4px 20px hsla(220, 39%, 11%, 0.1);
+    --shadow-elegant: 0 8px 32px hsla(220, 39%, 11%, 0.15);
+    --shadow-glow: 0 0 40px hsla(45, 100%, 51%, 0.3);
+
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,17 +77,23 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Dark mode for hotel app - maintaining luxury feel */
+    --background: 220 39% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 220 39% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 220 39% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 45 100% 51%;
+    --primary-foreground: 220 39% 11%;
+    --primary-hover: 45 100% 45%;
+
+    --gold: 45 100% 51%;
+    --gold-light: 45 100% 35%;
+    --gold-dark: 45 100% 65%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -74,7 +101,7 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 45 100% 25%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -82,7 +109,15 @@ All colors MUST be HSL.
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 45 100% 51%;
+    
+    --glass-bg: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-hover: 0 0% 100% / 0.15;
+    
+    --shadow-soft: 0 4px 20px hsla(220, 39%, 2%, 0.5);
+    --shadow-elegant: 0 8px 32px hsla(220, 39%, 2%, 0.6);
+    --shadow-glow: 0 0 40px hsla(45, 100%, 51%, 0.2);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +136,34 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Glassmorphism utility classes */
+  .glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Animation for voice waveform */
+  @keyframes wave {
+    0%, 100% { height: 8px; }
+    50% { height: 24px; }
+  }
+  
+  .wave-animation {
+    animation: wave 0.8s ease-in-out infinite;
+  }
+  
+  /* Smooth transitions */
+  .transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
