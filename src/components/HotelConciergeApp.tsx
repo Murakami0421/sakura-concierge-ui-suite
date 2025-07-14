@@ -600,7 +600,7 @@ const HotelConciergeApp: React.FC = () => {
                   <h4 className="font-semibold mb-2">Operating Hours</h4>
                   <p>Front Desk: 24 hours</p>
                   <p>Restaurant: 6:00-23:00</p>
-                  <p>Spa: 8:00-22:00</p>
+                  <p>Spa: 24 hours</p>
                 </div>
               </div>
             </motion.div>
