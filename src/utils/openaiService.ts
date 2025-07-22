@@ -14,8 +14,15 @@ export interface OpenAIResponse {
   }>;
 }
 
-// APIキー取得関数
+// APIキー取得関数（本番環境対応）
 export const getApiKey = (): string | null => {
+  // 本番環境では環境変数から取得
+  const envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (envApiKey) {
+    return envApiKey;
+  }
+  
+  // 開発環境ではlocalStorageから取得（後方互換性のため）
   return localStorage.getItem('openai_api_key');
 };
 
@@ -87,7 +94,7 @@ export const sendMessageToAI = async (userMessage: string): Promise<string> => {
   const apiKey = getApiKey();
   
   if (!apiKey) {
-    throw new Error('APIキーが設定されていません。設定モーダルからOpenAI APIキーを入力してください。');
+    throw new Error('AIサービスの設定を確認中です。しばらくお待ちください。管理者にお問い合わせください。');
   }
 
   if (apiKey === 'sk-demo-key-placeholder') {
