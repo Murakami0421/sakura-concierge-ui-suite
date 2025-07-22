@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { 
   MessageCircle, 
   Mic, 
@@ -17,8 +18,13 @@ import {
   DollarSign,
   Hand,
   Map,
-  ChevronDown
+  ChevronDown,
+  Loader2,
+  Settings
 } from 'lucide-react';
+
+// Import OpenAI service
+import { getApiKey, saveApiKey, sendMessageToAI } from '@/utils/openaiService';
 
 // Import hotel images
 import hotelLobby from '@/assets/hotel-lobby.jpg';
@@ -173,11 +179,22 @@ const HotelConciergeApp: React.FC = () => {
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [chatMessages, setChatMessages] = useState<Array<{text: string, sender: 'user' | 'bot'}>>([]);
+  const [chatMessages, setChatMessages] = useState<Array<{text: string, sender: 'user' | 'bot', isMarkdown?: boolean}>>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const t = translations[currentLanguage as keyof typeof translations];
+
+  // Check API key on mount
+  useEffect(() => {
+    const savedApiKey = getApiKey();
+    if (!savedApiKey) {
+      setShowApiKeyModal(true);
+    }
+  }, []);
 
   // Background slideshow effect
   useEffect(() => {
@@ -195,15 +212,39 @@ const HotelConciergeApp: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = async (question: string) => {
     setActiveModal('chat');
-    setChatMessages([{text: question, sender: 'user'}, {text: 'ありがとうございます。少々お待ちください...', sender: 'bot'}]);
+    setChatMessages([{text: question, sender: 'user'}]);
+    await sendMessageToBot(question);
   };
 
-  const handleSendMessage = () => {
-    if (currentMessage.trim()) {
-      setChatMessages(prev => [...prev, {text: currentMessage, sender: 'user'}, {text: 'ありがとうございます。少々お待ちください...', sender: 'bot'}]);
+  const handleSendMessage = async () => {
+    if (currentMessage.trim() && !isLoading) {
+      const message = currentMessage.trim();
+      setChatMessages(prev => [...prev, {text: message, sender: 'user'}]);
       setCurrentMessage('');
+      await sendMessageToBot(message);
+    }
+  };
+
+  const sendMessageToBot = async (message: string) => {
+    setIsLoading(true);
+    try {
+      const response = await sendMessageToAI(message);
+      setChatMessages(prev => [...prev, {text: response, sender: 'bot', isMarkdown: true}]);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '申し訳ございません。現在AIと通信できません。しばらく待ってから再度お試しください。';
+      setChatMessages(prev => [...prev, {text: errorMessage, sender: 'bot'}]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+      saveApiKey(apiKey.trim());
+      setShowApiKeyModal(false);
+      setApiKey('');
     }
   };
 
@@ -446,10 +487,24 @@ const HotelConciergeApp: React.FC = () => {
                     <div className={`max-w-xs p-3 rounded-2xl ${
                       message.sender === 'user' ? 'bg-primary text-white' : 'bg-gray-100'
                     }`}>
-                      {message.text}
+                      {message.isMarkdown ? (
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown>{message.text}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        message.text
+                      )}
                     </div>
                   </div>
                 ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 p-3 rounded-2xl flex items-center space-x-2">
+                      <Loader2 size={16} className="animate-spin" />
+                      <span className="text-sm">AIが応答中...</span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="flex space-x-2">
@@ -463,9 +518,10 @@ const HotelConciergeApp: React.FC = () => {
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="p-3 bg-primary text-white rounded-2xl hover:bg-primary-hover"
+                  disabled={isLoading}
+                  className="p-3 bg-primary text-white rounded-2xl hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send size={20} />
+                  {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                 </button>
               </div>
             </motion.div>
@@ -646,6 +702,64 @@ const HotelConciergeApp: React.FC = () => {
                     <p className="text-gray-600 text-sm mt-1">{faq.a}</p>
                   </div>
                 ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* API Key Setup Modal */}
+      <AnimatePresence>
+        {showApiKeyModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[60] bg-black/70 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="bg-white rounded-3xl p-6 max-w-md w-full mx-4"
+            >
+              <div className="text-center mb-6">
+                <Settings size={48} className="mx-auto mb-4 text-primary" />
+                <h3 className="text-xl font-bold mb-2">OpenAI API Key Setup</h3>
+                <div className="text-sm text-gray-600 space-y-2">
+                  <p>⚠️ <strong>開発・学習用の設定です</strong></p>
+                  <p>本番環境では使用しないでください</p>
+                  <p>APIキーはブラウザのlocalStorageに保存されます</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    OpenAI API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="sk-..."
+                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>• OpenAI Platform (platform.openai.com) でAPIキーを取得</p>
+                  <p>• GPT-4の利用権限が必要です</p>
+                  <p>• 使用量に応じて課金されます</p>
+                </div>
+                
+                <button
+                  onClick={handleSaveApiKey}
+                  disabled={!apiKey.trim()}
+                  className="w-full p-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  保存してアプリを開始
+                </button>
               </div>
             </motion.div>
           </motion.div>
